@@ -207,6 +207,35 @@
     return div.innerHTML;
   }
 
+  // ── Lightbox ──
+
+  var lightbox = document.createElement("div");
+  lightbox.className = "lightbox";
+  lightbox.innerHTML = '<img src="" alt="">';
+  document.body.appendChild(lightbox);
+
+  var lightboxImg = lightbox.querySelector("img");
+
+  lightbox.addEventListener("click", function () {
+    lightbox.classList.remove("active");
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      lightbox.classList.remove("active");
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    var img = e.target;
+    if (img.tagName !== "IMG") return;
+    var parent = img.closest(".screenshot, .walkthrough-img");
+    if (!parent) return;
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightbox.classList.add("active");
+  });
+
   // ── Fetch & Render ──
 
   function loadJSON(url, callback) {

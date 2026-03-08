@@ -108,34 +108,101 @@
       <h2>Explore the Platform</h2>
       <p>Live UIs are available when the management cluster is running. Screenshots shown as fallback.</p>
     </div>
+
+    <!-- Platform UIs -->
     <div class="ui-cards">
       <div class="ui-card">
-        <div class="screenshot">Screenshot: ArgoCD</div>
+        <div class="screenshot"><img src="images/screenshots/argocd.png" alt="ArgoCD app-of-apps view showing 30+ synced applications" loading="lazy"></div>
         <div class="info">
           <h3><a href="https://argocd.plateng.dev" target="_blank" rel="noopener">ArgoCD</a></h3>
           <p>GitOps continuous delivery. App-of-apps pattern managing 30+ applications across clusters.</p>
         </div>
       </div>
       <div class="ui-card">
-        <div class="screenshot">Screenshot: Backstage</div>
+        <div class="screenshot"><img src="images/screenshots/backstage.png" alt="Backstage software catalog showing 13 platform components" loading="lazy"></div>
         <div class="info">
           <h3><a href="https://backstage.plateng.dev" target="_blank" rel="noopener">Backstage</a></h3>
           <p>Developer portal with software catalog, cluster creation templates, and TechDocs.</p>
         </div>
       </div>
       <div class="ui-card">
-        <div class="screenshot">Screenshot: Grafana</div>
+        <div class="screenshot"><img src="images/screenshots/grafana.png" alt="Grafana dashboard showing cluster CPU and memory metrics" loading="lazy"></div>
         <div class="info">
           <h3><a href="https://grafana.plateng.dev" target="_blank" rel="noopener">Grafana</a></h3>
           <p>Full LGTM observability stack &mdash; Prometheus metrics, Loki logs, Tempo traces.</p>
         </div>
       </div>
       <div class="ui-card">
-        <div class="screenshot">Screenshot: Kargo</div>
+        <div class="screenshot"><img src="images/screenshots/kargo.png" alt="Kargo podinfo-delivery pipeline with staging and prod stages" loading="lazy"></div>
         <div class="info">
           <h3><a href="https://kargo.plateng.dev" target="_blank" rel="noopener">Kargo</a></h3>
           <p>GitOps-native progressive delivery. Promotion pipelines from staging to production.</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Self-Service Cluster Creation Walkthrough -->
+    <h3 style="font-size: 1.1rem; margin: 2.5rem 0 0.5rem;">Self-Service Cluster Creation</h3>
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+      Developers provision EKS or GKE clusters through a Backstage template. The template generates
+      Crossplane claims, opens a GitHub PR, and once merged, ArgoCD + Crossplane provision the cluster automatically.
+    </p>
+
+    <div class="walkthrough">
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-template-k8s-cluster.png" alt="Backstage template: Create Kubernetes Cluster" loading="lazy"></div>
+        <div class="walkthrough-label">Choose template</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-eks-workload-step1.png" alt="EKS cluster configuration: cloud provider, region, node count" loading="lazy"></div>
+        <div class="walkthrough-label">EKS: Configure cluster</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-eks-workload-step2.png" alt="EKS cluster: authorization and lifecycle settings" loading="lazy"></div>
+        <div class="walkthrough-label">EKS: Set lifecycle</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-eks-workload-step3.png" alt="EKS cluster: review all settings before creation" loading="lazy"></div>
+        <div class="walkthrough-label">EKS: Review</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-eks-workload-confirmation.png" alt="EKS cluster creation running: generating claims, creating PR" loading="lazy"></div>
+        <div class="walkthrough-label">EKS: Creating</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/eks-workload-github-PR-1-overview.png" alt="GitHub PR overview for EKS workload cluster" loading="lazy"></div>
+        <div class="walkthrough-label">EKS: GitHub PR</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/eks-workload-github-PR-2-files.png" alt="GitHub PR files: Crossplane claim YAML for EKS cluster" loading="lazy"></div>
+        <div class="walkthrough-label">EKS: Claim YAML</div>
+      </div>
+    </div>
+
+    <div class="walkthrough" style="margin-top: 1rem;">
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-gke-workload-step1.png" alt="GKE cluster configuration: cloud provider, region, node count" loading="lazy"></div>
+        <div class="walkthrough-label">GKE: Configure cluster</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-gke-workload-step2.png" alt="GKE cluster: authorization and lifecycle settings" loading="lazy"></div>
+        <div class="walkthrough-label">GKE: Set lifecycle</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-gke-workload-step3.png" alt="GKE cluster: review all settings before creation" loading="lazy"></div>
+        <div class="walkthrough-label">GKE: Review</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/backstage-gke-workload-confirmation.png" alt="GKE cluster creation running: generating claims, creating PR" loading="lazy"></div>
+        <div class="walkthrough-label">GKE: Creating</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/gke-workload-github-PR-1-overview.png" alt="GitHub PR overview for GKE workload cluster" loading="lazy"></div>
+        <div class="walkthrough-label">GKE: GitHub PR</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/gke-workload-github-PR-2-files.jpg" alt="GitHub PR files: Crossplane claim YAML for GKE cluster" loading="lazy"></div>
+        <div class="walkthrough-label">GKE: Claim YAML</div>
       </div>
     </div>
   </div>
