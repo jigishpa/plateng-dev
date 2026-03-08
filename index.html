@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>plateng.dev — Multi-Cloud Platform Engineering</title>
+  <meta name="description" content="A production-grade, GitOps-driven multi-cloud platform spanning AWS (EKS) and GCP (GKE). Zero static credentials, all infrastructure as code.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav">
+  <div class="container">
+    <a href="#" class="nav-brand">plateng.dev</a>
+    <ul class="nav-links">
+      <li><a href="#status">Status</a></li>
+      <li><a href="#e2e">E2E Tests</a></li>
+      <li><a href="#explore">Explore</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#cncf">CNCF</a></li>
+      <li><a href="#decisions">Decisions</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero" id="top">
+  <div class="container">
+    <h1>Multi-Cloud Platform Engineering</h1>
+    <p class="subtitle">
+      A production-grade, GitOps-driven platform spanning AWS and GCP.
+      Zero static credentials. All infrastructure as code. No ClickOps.
+    </p>
+    <p class="author">
+      Built by <strong>Jigish Patel</strong> &middot;
+      <a href="https://github.com/jigishpa">GitHub</a> &middot;
+      <a href="https://www.linkedin.com/in/jigishpa/">LinkedIn</a>
+    </p>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <span class="number">2</span>
+        <span class="label">Clouds</span>
+      </div>
+      <div class="stat">
+        <span class="number">10</span>
+        <span class="label">Phases</span>
+      </div>
+      <div class="stat">
+        <span class="number">100+</span>
+        <span class="label">Dev Sessions</span>
+      </div>
+      <div class="stat">
+        <span class="number">15+</span>
+        <span class="label">CNCF Projects</span>
+      </div>
+      <div class="stat">
+        <span class="number">0</span>
+        <span class="label">Static Credentials</span>
+      </div>
+      <div class="stat">
+        <span class="number">0</span>
+        <span class="label">Lines Written Manually</span>
+      </div>
+    </div>
+
+    <div class="ui-links">
+      <a href="https://backstage.plateng.dev" class="ui-link" target="_blank" rel="noopener">Backstage</a>
+      <a href="https://argocd.plateng.dev" class="ui-link" target="_blank" rel="noopener">ArgoCD</a>
+      <a href="https://grafana.plateng.dev" class="ui-link" target="_blank" rel="noopener">Grafana</a>
+      <a href="https://kargo.plateng.dev" class="ui-link" target="_blank" rel="noopener">Kargo</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Live Status ── -->
+<section id="status">
+  <div class="container">
+    <div class="section-header">
+      <h2>Platform Status</h2>
+      <p>Live health checks run every 30 minutes via GitHub Actions.</p>
+    </div>
+    <div id="status-content">
+      <div class="status-message">Status data collecting... checks run every 30 minutes.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── E2E Results ── -->
+<section id="e2e">
+  <div class="container">
+    <div class="section-header">
+      <h2>Daily E2E Validation</h2>
+      <p>Every day, ephemeral EKS and GKE clusters are spun up, validated end-to-end, and torn down.</p>
+    </div>
+    <div id="e2e-content">
+      <div class="status-message">No E2E test results yet. Daily tests validate the full platform pipeline.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Live UIs / Screenshots ── -->
+<section id="explore">
+  <div class="container">
+    <div class="section-header">
+      <h2>Explore the Platform</h2>
+      <p>Live UIs are available when the management cluster is running. Screenshots shown as fallback.</p>
+    </div>
+    <div class="ui-cards">
+      <div class="ui-card">
+        <div class="screenshot">Screenshot: ArgoCD</div>
+        <div class="info">
+          <h3><a href="https://argocd.plateng.dev" target="_blank" rel="noopener">ArgoCD</a></h3>
+          <p>GitOps continuous delivery. App-of-apps pattern managing 30+ applications across clusters.</p>
+        </div>
+      </div>
+      <div class="ui-card">
+        <div class="screenshot">Screenshot: Backstage</div>
+        <div class="info">
+          <h3><a href="https://backstage.plateng.dev" target="_blank" rel="noopener">Backstage</a></h3>
+          <p>Developer portal with software catalog, cluster creation templates, and TechDocs.</p>
+        </div>
+      </div>
+      <div class="ui-card">
+        <div class="screenshot">Screenshot: Grafana</div>
+        <div class="info">
+          <h3><a href="https://grafana.plateng.dev" target="_blank" rel="noopener">Grafana</a></h3>
+          <p>Full LGTM observability stack &mdash; Prometheus metrics, Loki logs, Tempo traces.</p>
+        </div>
+      </div>
+      <div class="ui-card">
+        <div class="screenshot">Screenshot: Kargo</div>
+        <div class="info">
+          <h3><a href="https://kargo.plateng.dev" target="_blank" rel="noopener">Kargo</a></h3>
+          <p>GitOps-native progressive delivery. Promotion pipelines from staging to production.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Architecture ── -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header">
+      <h2>Architecture</h2>
+      <p>A single EKS management cluster provisions and manages workload clusters on both AWS and GCP.</p>
+    </div>
+
+    <div class="principles">
+      <div class="principle">
+        <h3>Zero Static Credentials</h3>
+        <p>IRSA for AWS, Workload Identity Federation for GCP. No long-lived secrets anywhere.</p>
+      </div>
+      <div class="principle">
+        <h3>GitOps-Native</h3>
+        <p>All changes flow through Git. ArgoCD reconciles desired state automatically.</p>
+      </div>
+      <div class="principle">
+        <h3>Cloud-Portable</h3>
+        <p>Same claim API provisions EKS or GKE. Crossplane compositions abstract cloud differences.</p>
+      </div>
+      <div class="principle">
+        <h3>Observable</h3>
+        <p>Full LGTM stack: Prometheus, Grafana, Loki, Tempo. Dashboards and alerts from day one.</p>
+      </div>
+      <div class="principle">
+        <h3>Secure by Default</h3>
+        <p>Kyverno policies, Pod Security Standards, automated TLS, SSO across all tools.</p>
+      </div>
+      <div class="principle">
+        <h3>All Infrastructure as Code</h3>
+        <p>Pure Crossplane &mdash; no Terraform, no ClickOps. Every resource is a Kubernetes manifest.</p>
+      </div>
+      <div class="principle">
+        <h3>Built Entirely with AI</h3>
+        <p>Every line of code, every kubectl command, every debugging session &mdash; done through Claude Code across 100+ paired sessions. Zero lines written manually.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">3-Tier Bootstrap Flow</h3>
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+      The platform bootstraps itself through three tiers, progressively upgrading from
+      static credentials to fully keyless authentication.
+    </p>
+    <div class="bootstrap-flow">
+      <div class="tier">
+        <div class="tier-header">
+          <span class="tier-number">1</span>
+          <h4>Bootstrap Cluster <span style="font-weight: 400; color: var(--color-text-muted);">(Local)</span></h4>
+        </div>
+        <p>Kind cluster on a laptop. Crossplane + AWS provider with temporary secret-based credentials. Creates the management cluster, then is deleted.</p>
+      </div>
+      <div class="tier-arrow">&darr;</div>
+      <div class="tier">
+        <div class="tier-header">
+          <span class="tier-number">2</span>
+          <h4>Management Cluster <span style="font-weight: 400; color: var(--color-text-muted);">(EKS)</span></h4>
+        </div>
+        <p>Self-managing EKS cluster. Crossplane with IRSA (AWS) and Workload Identity Federation (GCP) &mdash; zero static credentials. Runs ArgoCD, Backstage, Kargo, and the full observability stack.</p>
+      </div>
+      <div class="tier-arrow">&darr;</div>
+      <div class="tier">
+        <div class="tier-header">
+          <span class="tier-number">3</span>
+          <h4>Workload Clusters <span style="font-weight: 400; color: var(--color-text-muted);">(EKS + GKE)</span></h4>
+        </div>
+        <p>Ephemeral clusters provisioned on-demand via Backstage templates. Platform services (Istio, cert-manager, ExternalDNS) auto-deployed by ArgoCD. Kargo promotes applications through staging to production.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Technology Stack</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Technology</th>
+          <th>Why This Choice</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Infrastructure as Code</td>
+          <td>Crossplane</td>
+          <td>Kubernetes-native, GitOps-friendly (not Terraform)</td>
+        </tr>
+        <tr>
+          <td>GitOps</td>
+          <td>ArgoCD</td>
+          <td>App-of-apps, multi-cluster, health checks</td>
+        </tr>
+        <tr>
+          <td>Progressive Delivery</td>
+          <td>Kargo</td>
+          <td>GitOps-native promotions (not Argo Rollouts)</td>
+        </tr>
+        <tr>
+          <td>Developer Portal</td>
+          <td>Backstage</td>
+          <td>CNCF standard, software templates, TechDocs</td>
+        </tr>
+        <tr>
+          <td>Identity / SSO</td>
+          <td>Dex + Google</td>
+          <td>Unified SSO across all UIs and both clouds</td>
+        </tr>
+        <tr>
+          <td>Observability</td>
+          <td>Prometheus + Grafana + Loki + Tempo</td>
+          <td>Full LGTM stack, industry standard</td>
+        </tr>
+        <tr>
+          <td>Service Mesh</td>
+          <td>Istio + Gateway API</td>
+          <td>L7 traffic management, mTLS</td>
+        </tr>
+        <tr>
+          <td>Policy</td>
+          <td>Kyverno</td>
+          <td>Kubernetes-native, mutation + validation</td>
+        </tr>
+        <tr>
+          <td>Secrets</td>
+          <td>ESO + AWS Secrets Manager</td>
+          <td>No secrets in Git, auto-rotation</td>
+        </tr>
+        <tr>
+          <td>TLS</td>
+          <td>cert-manager + Let's Encrypt</td>
+          <td>Automated certificate lifecycle</td>
+        </tr>
+        <tr>
+          <td>DNS</td>
+          <td>ExternalDNS</td>
+          <td>Automated DNS from Kubernetes resources</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Roadmap / Phases ── -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-header">
+      <h2>Implementation Roadmap</h2>
+      <p>Built iteratively across 10 phases, each expanding the platform's capabilities.</p>
+    </div>
+
+    <ul class="phase-list">
+      <li>
+        <details>
+          <summary>
+            Phase 0: Foundation
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>AWS account setup with IAM Identity Center</li>
+              <li>Crossplane bootstrap on Kind cluster</li>
+              <li>CloudTrail audit logging</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 1: Management Cluster
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>EKS management cluster via Crossplane</li>
+              <li>IRSA for keyless AWS authentication</li>
+              <li>Crossplane pivot from Kind to EKS</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 2: Multi-Cloud
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>GCP Workload Identity Federation (keyless)</li>
+              <li>Crossplane GCP providers</li>
+              <li>GKE cluster provisioning</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 3: GitOps
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>ArgoCD app-of-apps pattern</li>
+              <li>Crossplane compositions for EKS + GKE</li>
+              <li>Cluster claim API for self-service provisioning</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 4: Observability
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>Prometheus + Grafana for metrics</li>
+              <li>Loki for log aggregation</li>
+              <li>Tempo for distributed tracing</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 5: Security &amp; Policy
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>Kyverno baseline policies (enforce + audit)</li>
+              <li>Pod Security Standards</li>
+              <li>External Secrets Operator + AWS Secrets Manager</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 6: Ingress &amp; TLS
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>Istio service mesh + Gateway API</li>
+              <li>cert-manager with Let's Encrypt wildcard certificates</li>
+              <li>ExternalDNS for automated DNS management</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 7: HTTPS &amp; Identity
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>Dex OIDC provider with Google identity</li>
+              <li>SSO across ArgoCD, Backstage, Grafana, Kargo</li>
+              <li>*.plateng.dev with automated TLS</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 8: Developer Portal
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>Backstage with software catalog and templates</li>
+              <li>Self-service cluster creation (EKS + GKE)</li>
+              <li>Ephemeral clusters with TTL-based cleanup</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details>
+          <summary>
+            Phase 9: Progressive Delivery
+            <span class="phase-badge complete">Complete</span>
+          </summary>
+          <div class="phase-content">
+            <ul>
+              <li>Kargo promotion pipelines (staging &rarr; production)</li>
+              <li>Layer separation with ClusterGateway pattern (ADR-0015)</li>
+              <li>E2E validated on both EKS and GKE</li>
+            </ul>
+          </div>
+        </details>
+      </li>
+    </ul>
+
+    <h3 style="font-size: 1.1rem; margin: 2rem 0 1rem;">Capability Matrix</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Platform Feature</th>
+          <th>Industry Practice</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Multi-cloud provisioning</td>
+          <td>Crossplane compositions (EKS + GKE)</td>
+          <td>Cloud-agnostic control plane</td>
+        </tr>
+        <tr>
+          <td>GitOps delivery</td>
+          <td>ArgoCD app-of-apps + ApplicationSets</td>
+          <td>CNCF GitOps principles</td>
+        </tr>
+        <tr>
+          <td>Progressive delivery</td>
+          <td>Kargo promotion pipelines</td>
+          <td>Environment promotion gates</td>
+        </tr>
+        <tr>
+          <td>Self-service infrastructure</td>
+          <td>Backstage software templates</td>
+          <td>Internal Developer Platform</td>
+        </tr>
+        <tr>
+          <td>Ephemeral environments</td>
+          <td>TTL-based clusters with CronJob cleanup</td>
+          <td>On-demand dev/test environments</td>
+        </tr>
+        <tr>
+          <td>Zero-trust identity</td>
+          <td>IRSA + Workload Identity Federation</td>
+          <td>Keyless workload authentication</td>
+        </tr>
+        <tr>
+          <td>Unified observability</td>
+          <td>Prometheus, Grafana, Loki, Tempo</td>
+          <td>LGTM stack</td>
+        </tr>
+        <tr>
+          <td>Policy enforcement</td>
+          <td>Kyverno baseline policies</td>
+          <td>Pod Security Standards</td>
+        </tr>
+        <tr>
+          <td>Secrets management</td>
+          <td>ESO + AWS Secrets Manager</td>
+          <td>External secret stores</td>
+        </tr>
+        <tr>
+          <td>Service mesh</td>
+          <td>Istio + Gateway API</td>
+          <td>L7 traffic management</td>
+        </tr>
+        <tr>
+          <td>SSO across tools</td>
+          <td>Dex OIDC (ArgoCD, Backstage, Grafana, Kargo)</td>
+          <td>Unified developer experience</td>
+        </tr>
+        <tr>
+          <td>Automated TLS</td>
+          <td>cert-manager + Let's Encrypt + ExternalDNS</td>
+          <td>Certificate automation</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── CNCF Alignment ── -->
+<section id="cncf">
+  <div class="container">
+    <div class="section-header">
+      <h2>CNCF Ecosystem</h2>
+      <p>Built on CNCF projects across the maturity spectrum.</p>
+    </div>
+    <div class="cncf-grid">
+      <div class="cncf-item">
+        <div class="project-name">Kubernetes <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">Foundation</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">Prometheus <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">Metrics collection</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">ArgoCD <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">GitOps delivery</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">Istio <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">Service mesh</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">Crossplane <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">Infrastructure provisioning</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">cert-manager <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">TLS automation</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">Kyverno <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">Policy enforcement</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">OpenTelemetry <span class="maturity-badge graduated">Graduated</span></div>
+        <div class="project-role">Tracing (via Tempo)</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">Backstage <span class="maturity-badge incubating">Incubating</span></div>
+        <div class="project-role">Developer portal</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">ExternalDNS <span class="maturity-badge incubating">Incubating</span></div>
+        <div class="project-role">DNS automation</div>
+      </div>
+      <div class="cncf-item">
+        <div class="project-name">Gateway API <span class="maturity-badge standard">Standard</span></div>
+        <div class="project-role">L7 routing</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Decisions (ADRs) ── -->
+<section id="decisions">
+  <div class="container">
+    <div class="section-header">
+      <h2>Architecture Decisions</h2>
+      <p>Key decisions documented as Architecture Decision Records.</p>
+    </div>
+    <ul class="adr-list">
+      <li>
+        <span class="adr-number">ADR-0009</span>
+        <span>Crossplane IRSA authentication for AWS providers (no static credentials)</span>
+      </li>
+      <li>
+        <span class="adr-number">ADR-0010</span>
+        <span>ArgoCD annotation+label tracking for safe resource pruning</span>
+      </li>
+      <li>
+        <span class="adr-number">ADR-0011</span>
+        <span>GCP Workload Identity Federation for keyless cross-cloud access</span>
+      </li>
+      <li>
+        <span class="adr-number">ADR-0012</span>
+        <span>Istio Gateway API for unified ingress across management and workload clusters</span>
+      </li>
+      <li>
+        <span class="adr-number">ADR-0013</span>
+        <span>Dex as unified OIDC provider for SSO across all platform tools</span>
+      </li>
+      <li>
+        <span class="adr-number">ADR-0014</span>
+        <span>Kargo for GitOps-native progressive delivery over Argo Rollouts</span>
+      </li>
+      <li>
+        <span class="adr-number">ADR-0015</span>
+        <span>ClusterGateway layer separation for independent cluster and ingress lifecycle</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ── Cost & Process ── -->
+<section id="cost">
+  <div class="container">
+    <div class="section-header">
+      <h2>Cost &amp; Process</h2>
+      <p>Cost-conscious design decisions and development approach.</p>
+    </div>
+
+    <div class="cost-grid">
+      <div class="cost-card">
+        <h3>Daily E2E Tests</h3>
+        <div class="amount">~$6/mo</div>
+        <div class="note">Both EKS + GKE clusters, 30 min each, daily</div>
+      </div>
+      <div class="cost-card">
+        <h3>Management Cluster</h3>
+        <div class="amount">On-demand</div>
+        <div class="note">Torn down when not in use to minimize cost</div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Cost-Conscious Decisions</h3>
+    <ul style="list-style: disc; padding-left: 1.5rem; font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 2rem;">
+      <li>Ephemeral workload clusters with TTL-based cleanup (not always-on)</li>
+      <li>Management cluster lifecycle managed for cost (up only when needed)</li>
+      <li>Single management cluster serving both clouds</li>
+      <li>GitHub Pages for status page hosting (free)</li>
+      <li>GitHub Actions for status checks and E2E tests (free for public repos)</li>
+    </ul>
+
+    <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">AI-Paired Development</h3>
+    <p style="font-size: 0.9rem; color: var(--color-text-muted);">
+      This entire platform &mdash; every YAML manifest, Crossplane composition, Helm configuration,
+      ArgoCD application, shell command, and debugging session &mdash; was built through
+      Claude Code across 100+ iterative sessions. No code was written manually.
+      Architecture decisions, infrastructure provisioning, troubleshooting, and operations
+      were all done through AI-paired development, with session context
+      carrying across the full build.
+    </p>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <p>
+      <a href="https://github.com/jigishpa/plateng-dev">Source</a> &middot;
+      Built with plain HTML, CSS, and vanilla JS &middot;
+      &copy; 2026
+    </p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
