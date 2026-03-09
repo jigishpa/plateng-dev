@@ -23,11 +23,6 @@
       "date": "2026-03-09",
       "result": "pass",
       "durationSeconds": 1386
-    },
-    {
-      "date": "null",
-      "result": "null",
-      "durationSeconds": null
     }
   ]
 }

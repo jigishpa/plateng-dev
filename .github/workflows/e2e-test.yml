@@ -373,9 +373,9 @@ jobs:
               '{date: $date, result: $result, durationSeconds: $dur}')
           fi
 
-          # Prepend to history, cap at 90 entries
+          # Prepend to history, filter nulls, cap at 90 entries
           HISTORY=$(echo "$EXISTING" | jq --argjson entry "$HISTORY_ENTRY" \
-            '[($entry)] + (.history // []) | .[0:90]')
+            '[($entry)] + (.history // []) | [.[] | select(.date != "null" and .date != null)] | .[0:90]')
 
           jq -n --argjson lastRun "$LAST_RUN" --argjson history "$HISTORY" \
             '{lastRun: $lastRun, history: $history}' > data/e2e-results.json
