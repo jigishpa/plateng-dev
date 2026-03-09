@@ -136,7 +136,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git pull --rebase
             git commit -m "chore: update platform status"
+            git pull --rebase
             git push
           fi
