@@ -1,4 +1,16 @@
 {
-  "lastRun": null,
-  "history": []
+  "lastRun": {
+    "date": null,
+    "result": null,
+    "durationSeconds": null,
+    "eks": null,
+    "gke": null
+  },
+  "history": [
+    {
+      "date": "null",
+      "result": "null",
+      "durationSeconds": null
+    }
+  ]
 }
