@@ -1,0 +1,395 @@
+name: Daily E2E Test
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  INFRA_REPO: jigishpa/multicloud-platform
+  CLAIM_BASE: crossplane/claims/ephemeral
+  EKS_PODINFO_URL: https://podinfo.staging.plateng.dev
+  GKE_PODINFO_URL: https://podinfo.prod.plateng.dev
+  INITIAL_WAIT: 720
+  POLL_INTERVAL: 30
+  TIMEOUT: 2100
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Step 1: Pre-flight ──
+      - name: Pre-flight check
+        id: preflight
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://argocd.plateng.dev 2>/dev/null) || HTTP_CODE="000"
+          if (( 10#${HTTP_CODE} >= 200 && 10#${HTTP_CODE} < 400 )); then
+            echo "ArgoCD is up (HTTP $HTTP_CODE), proceeding"
+            echo "cluster_up=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ArgoCD is down (HTTP $HTTP_CODE), skipping E2E"
+            echo "cluster_up=false" >> "$GITHUB_OUTPUT"
+            jq -n --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              '{result: "skipped", reason: "cluster-offline", date: $date}' > /tmp/e2e-state.json
+          fi
+
+      # ── Step 2: Push cluster claims ──
+      - name: Push cluster claims
+        if: steps.preflight.outputs.cluster_up == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_REPO_PAT }}
+        run: |
+          set -euo pipefail
+
+          START_TIME=$(date -u +%s)
+          echo "{\"start_time\": $START_TIME}" > /tmp/e2e-state.json
+
+          # Helper: push or update a file in the infra repo
+          push_file() {
+            local filepath="$1" content_b64="$2" message="$3"
+            local resp http_code body sha data
+
+            resp=$(curl -s -w "\n%{http_code}" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${INFRA_REPO}/contents/${filepath}?ref=main")
+            http_code=$(echo "$resp" | tail -1)
+            body=$(echo "$resp" | sed '$d')
+
+            if [[ "$http_code" == "200" ]]; then
+              sha=$(echo "$body" | jq -r '.sha')
+              data=$(jq -n --arg msg "$message" --arg c "$content_b64" --arg sha "$sha" \
+                '{message: $msg, content: $c, sha: $sha, branch: "main"}')
+            else
+              data=$(jq -n --arg msg "$message" --arg c "$content_b64" \
+                '{message: $msg, content: $c, branch: "main"}')
+            fi
+
+            local put_resp put_code
+            put_resp=$(curl -s -w "\n%{http_code}" -X PUT \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${INFRA_REPO}/contents/${filepath}" \
+              -d "$data")
+            put_code=$(echo "$put_resp" | tail -1)
+
+            if [[ "$put_code" == "200" || "$put_code" == "201" ]]; then
+              echo "  OK: $filepath"
+            else
+              echo "  FAIL ($put_code): $filepath"
+              echo "$put_resp" | sed '$d' | jq -r '.message // .'
+              return 1
+            fi
+          }
+
+          echo "Pushing 4 claim files to ${INFRA_REPO}..."
+
+          # --- EKS cluster claim ---
+          cat > /tmp/eks-cluster.yaml <<'EOF'
+          apiVersion: platform.multicloud.io/v1alpha1
+          kind: KubernetesCluster
+          metadata:
+            name: eks-workload
+            namespace: crossplane-system
+            labels:
+              platform.multicloud.io/cluster-type: vanilla
+              platform.multicloud.io/e2e-test: "true"
+          spec:
+            cloud: aws
+            region: us-east-2
+            version: "1.32"
+            nodeCount: 2
+            nodeSize: small
+            vpcCidr: "10.200.0.0/16"
+            tier: workload
+            owner: e2e-bot
+            team: platform
+            ttl: "2h"
+            compositionSelector:
+              matchLabels:
+                provider: aws
+          EOF
+
+          push_file "${CLAIM_BASE}/e2e-eks-workload.yaml" \
+            "$(base64 -w0 /tmp/eks-cluster.yaml)" \
+            "e2e: create EKS workload cluster claim"
+
+          # --- EKS gateway claim ---
+          cat > /tmp/eks-gw.yaml <<'EOF'
+          apiVersion: platform.multicloud.io/v1alpha1
+          kind: ClusterGateway
+          metadata:
+            name: eks-workload-gateway
+            namespace: crossplane-system
+            labels:
+              platform.multicloud.io/cluster-type: vanilla
+              platform.multicloud.io/e2e-test: "true"
+          spec:
+            cloud: aws
+            clusterRef: eks-workload
+            region: us-east-2
+            compositionSelector:
+              matchLabels:
+                provider: aws
+          EOF
+
+          push_file "${CLAIM_BASE}/e2e-eks-workload-gw.yaml" \
+            "$(base64 -w0 /tmp/eks-gw.yaml)" \
+            "e2e: create EKS workload gateway claim"
+
+          # --- GKE cluster claim ---
+          cat > /tmp/gke-cluster.yaml <<'EOF'
+          apiVersion: platform.multicloud.io/v1alpha1
+          kind: KubernetesCluster
+          metadata:
+            name: gke-workload
+            namespace: crossplane-system
+            labels:
+              platform.multicloud.io/cluster-type: vanilla
+              platform.multicloud.io/e2e-test: "true"
+          spec:
+            cloud: gcp
+            region: us-central1
+            version: "1.32"
+            nodeCount: 2
+            nodeSize: small
+            vpcCidr: "10.201.0.0/16"
+            tier: workload
+            owner: e2e-bot
+            team: platform
+            ttl: "2h"
+            compositionSelector:
+              matchLabels:
+                provider: gcp
+          EOF
+
+          push_file "${CLAIM_BASE}/e2e-gke-workload.yaml" \
+            "$(base64 -w0 /tmp/gke-cluster.yaml)" \
+            "e2e: create GKE workload cluster claim"
+
+          # --- GKE gateway claim ---
+          cat > /tmp/gke-gw.yaml <<'EOF'
+          apiVersion: platform.multicloud.io/v1alpha1
+          kind: ClusterGateway
+          metadata:
+            name: gke-workload-gateway
+            namespace: crossplane-system
+            labels:
+              platform.multicloud.io/cluster-type: vanilla
+              platform.multicloud.io/e2e-test: "true"
+          spec:
+            cloud: gcp
+            clusterRef: gke-workload
+            region: us-central1
+            compositionSelector:
+              matchLabels:
+                provider: gcp
+          EOF
+
+          push_file "${CLAIM_BASE}/e2e-gke-workload-gw.yaml" \
+            "$(base64 -w0 /tmp/gke-gw.yaml)" \
+            "e2e: create GKE workload gateway claim"
+
+          echo "All claims pushed. Start time: $START_TIME"
+
+      # ── Step 3: Wait and poll ──
+      - name: Wait for clusters and validate endpoints
+        if: steps.preflight.outputs.cluster_up == 'true'
+        run: |
+          START_TIME=$(jq -r '.start_time' /tmp/e2e-state.json)
+          NOW=$(date -u +%s)
+
+          EKS_RESULT="fail"
+          GKE_RESULT="fail"
+          EKS_SECONDS=0
+          GKE_SECONDS=0
+          EKS_CODE=0
+          GKE_CODE=0
+          EKS_MS=0
+          GKE_MS=0
+
+          ELAPSED=$(( NOW - START_TIME ))
+          REMAINING_WAIT=$(( INITIAL_WAIT - ELAPSED ))
+          if (( REMAINING_WAIT > 0 )); then
+            echo "Waiting ${REMAINING_WAIT}s before first probe (${INITIAL_WAIT}s initial wait)..."
+            sleep "$REMAINING_WAIT"
+          fi
+
+          echo "Polling endpoints (timeout: ${TIMEOUT}s)..."
+          while true; do
+            NOW=$(date -u +%s)
+            ELAPSED=$(( NOW - START_TIME ))
+
+            if (( ELAPSED > TIMEOUT )); then
+              echo "Timeout reached (${TIMEOUT}s)"
+              break
+            fi
+
+            if [[ "$EKS_RESULT" == "fail" ]]; then
+              RESP=$(curl -s -o /dev/null -w "%{http_code}|%{time_total}" --max-time 10 "$EKS_PODINFO_URL" 2>/dev/null) || RESP="000|0"
+              CODE="${RESP%%|*}"
+              TIME="${RESP##*|}"
+              if (( 10#${CODE} >= 200 && 10#${CODE} < 400 )); then
+                EKS_RESULT="pass"
+                EKS_SECONDS=$ELAPSED
+                EKS_CODE=$((10#${CODE}))
+                EKS_MS=$(awk "BEGIN {printf \"%.0f\", ${TIME} * 1000}")
+                echo "  EKS UP at ${ELAPSED}s (HTTP ${CODE}, ${EKS_MS}ms)"
+              fi
+            fi
+
+            if [[ "$GKE_RESULT" == "fail" ]]; then
+              RESP=$(curl -s -o /dev/null -w "%{http_code}|%{time_total}" --max-time 10 "$GKE_PODINFO_URL" 2>/dev/null) || RESP="000|0"
+              CODE="${RESP%%|*}"
+              TIME="${RESP##*|}"
+              if (( 10#${CODE} >= 200 && 10#${CODE} < 400 )); then
+                GKE_RESULT="pass"
+                GKE_SECONDS=$ELAPSED
+                GKE_CODE=$((10#${CODE}))
+                GKE_MS=$(awk "BEGIN {printf \"%.0f\", ${TIME} * 1000}")
+                echo "  GKE UP at ${ELAPSED}s (HTTP ${CODE}, ${GKE_MS}ms)"
+              fi
+            fi
+
+            if [[ "$EKS_RESULT" == "pass" && "$GKE_RESULT" == "pass" ]]; then
+              echo "Both endpoints reachable"
+              break
+            fi
+
+            echo "  [${ELAPSED}s] EKS=$EKS_RESULT GKE=$GKE_RESULT - waiting ${POLL_INTERVAL}s..."
+            sleep "$POLL_INTERVAL"
+          done
+
+          TOTAL_ELAPSED=$(( $(date -u +%s) - START_TIME ))
+          OVERALL="fail"
+          if [[ "$EKS_RESULT" == "pass" && "$GKE_RESULT" == "pass" ]]; then
+            OVERALL="pass"
+          fi
+
+          jq -n \
+            --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg result "$OVERALL" \
+            --argjson duration "$TOTAL_ELAPSED" \
+            --arg eks_result "$EKS_RESULT" \
+            --argjson eks_seconds "$EKS_SECONDS" \
+            --argjson eks_code "$EKS_CODE" \
+            --argjson eks_ms "$EKS_MS" \
+            --arg gke_result "$GKE_RESULT" \
+            --argjson gke_seconds "$GKE_SECONDS" \
+            --argjson gke_code "$GKE_CODE" \
+            --argjson gke_ms "$GKE_MS" \
+            '{
+              result: $result,
+              date: $date,
+              durationSeconds: $duration,
+              eks: {result: $eks_result, provisionSeconds: $eks_seconds, podinfoUrl: "https://podinfo.staging.plateng.dev", httpCode: $eks_code, responseMs: $eks_ms},
+              gke: {result: $gke_result, provisionSeconds: $gke_seconds, podinfoUrl: "https://podinfo.prod.plateng.dev", httpCode: $gke_code, responseMs: $gke_ms}
+            }' > /tmp/e2e-state.json
+
+          echo "---"
+          cat /tmp/e2e-state.json
+
+      # ── Step 4: Cleanup claims ──
+      - name: Cleanup claims
+        if: always() && steps.preflight.outputs.cluster_up == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_REPO_PAT }}
+        run: |
+          delete_file() {
+            local filepath="$1" message="$2"
+            local resp http_code body sha
+
+            resp=$(curl -s -w "\n%{http_code}" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${INFRA_REPO}/contents/${filepath}?ref=main")
+            http_code=$(echo "$resp" | tail -1)
+            body=$(echo "$resp" | sed '$d')
+
+            if [[ "$http_code" != "200" ]]; then
+              echo "  SKIP (not found): $filepath"
+              return 0
+            fi
+
+            sha=$(echo "$body" | jq -r '.sha')
+            local del_data del_resp del_code
+            del_data=$(jq -n --arg msg "$message" --arg sha "$sha" \
+              '{message: $msg, sha: $sha, branch: "main"}')
+            del_resp=$(curl -s -w "\n%{http_code}" -X DELETE \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${INFRA_REPO}/contents/${filepath}" \
+              -d "$del_data")
+            del_code=$(echo "$del_resp" | tail -1)
+
+            if [[ "$del_code" == "200" ]]; then
+              echo "  Deleted: $filepath"
+            else
+              echo "  FAIL ($del_code): $filepath"
+            fi
+          }
+
+          echo "Cleaning up claim files..."
+          delete_file "${CLAIM_BASE}/e2e-eks-workload.yaml" "e2e: cleanup EKS workload cluster claim"
+          delete_file "${CLAIM_BASE}/e2e-eks-workload-gw.yaml" "e2e: cleanup EKS workload gateway claim"
+          delete_file "${CLAIM_BASE}/e2e-gke-workload.yaml" "e2e: cleanup GKE workload cluster claim"
+          delete_file "${CLAIM_BASE}/e2e-gke-workload-gw.yaml" "e2e: cleanup GKE workload gateway claim"
+          echo "Cleanup complete"
+
+      # ── Step 5: Record results and commit ──
+      - name: Record results and commit
+        if: always()
+        run: |
+          set -euo pipefail
+
+          STATE_FILE="/tmp/e2e-state.json"
+          if [[ ! -f "$STATE_FILE" ]]; then
+            echo "No state file found, nothing to record"
+            exit 0
+          fi
+
+          STATE=$(cat "$STATE_FILE")
+          RESULT=$(echo "$STATE" | jq -r '.result')
+          DATE=$(echo "$STATE" | jq -r '.date')
+          TODAY=$(echo "$DATE" | cut -dT -f1)
+
+          EXISTING=$(cat data/e2e-results.json)
+
+          if [[ "$RESULT" == "skipped" ]]; then
+            REASON=$(echo "$STATE" | jq -r '.reason // "unknown"')
+            LAST_RUN=$(echo "$EXISTING" | jq '.lastRun')
+            HISTORY_ENTRY=$(jq -n --arg date "$TODAY" --arg result "skipped" --arg reason "$REASON" \
+              '{date: $date, result: $result, reason: $reason}')
+          else
+            DURATION=$(echo "$STATE" | jq '.durationSeconds')
+            LAST_RUN=$(echo "$STATE" | jq '{date, result, durationSeconds, eks, gke}')
+            HISTORY_ENTRY=$(jq -n --arg date "$TODAY" --arg result "$RESULT" --argjson dur "$DURATION" \
+              '{date: $date, result: $result, durationSeconds: $dur}')
+          fi
+
+          # Prepend to history, cap at 90 entries
+          HISTORY=$(echo "$EXISTING" | jq --argjson entry "$HISTORY_ENTRY" \
+            '[($entry)] + (.history // []) | .[0:90]')
+
+          jq -n --argjson lastRun "$LAST_RUN" --argjson history "$HISTORY" \
+            '{lastRun: $lastRun, history: $history}' > data/e2e-results.json
+
+          echo "E2E result: $RESULT"
+          cat data/e2e-results.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/e2e-results.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update E2E test results ($RESULT)"
+            git pull --rebase
+            git push
+          fi
