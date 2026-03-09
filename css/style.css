@@ -616,6 +616,11 @@ section:last-of-type {
 }
 
 /* ── Tables ── */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -792,6 +797,7 @@ section:last-of-type {
   border-bottom: 1px solid var(--color-border);
   font-size: 0.9rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
