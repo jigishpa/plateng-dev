@@ -1,5 +1,6 @@
 name: Status Check
 
+# Probes platform endpoints every 30 minutes and records status in data/status.json
 on:
   schedule:
     - cron: '*/30 * * * *'
