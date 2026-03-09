@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <style>
+    /* Light mode (default) */
+    .bg { fill: #ffffff; }
+    .text { fill: #1f2328; }
+    .text-muted { fill: #656d76; }
+    .text-small { fill: #656d76; font-size: 12px; }
+    .box-mgmt { fill: #f6f8fa; stroke: #0969da; stroke-width: 2; }
+    .box-service { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; rx: 6; }
+    .box-eks { fill: #fff8f0; stroke: #d68a00; stroke-width: 2; }
+    .box-gke { fill: #f0f6ff; stroke: #1a73e8; stroke-width: 2; }
+    .box-identity { fill: #f0fff4; stroke: #1a7f37; stroke-width: 1.5; }
+    .box-git { fill: #f6f8fa; stroke: #656d76; stroke-width: 1.5; }
+    .arrow { stroke: #656d76; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+    .arrow-provision { stroke: #0969da; stroke-width: 1.5; fill: none; stroke-dasharray: 6 3; marker-end: url(#arrowhead-blue); }
+    .arrow-identity { stroke: #1a7f37; stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrowhead-green); }
+    .label-bg { fill: #ffffff; stroke: none; }
+    .badge { font-size: 11px; font-weight: 600; }
+    .badge-aws { fill: #d68a00; }
+    .badge-gcp { fill: #1a73e8; }
+    .section-label { fill: #656d76; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .text { fill: #e6edf3; }
+      .text-muted { fill: #8b949e; }
+      .text-small { fill: #8b949e; }
+      .box-mgmt { fill: #161b22; stroke: #58a6ff; }
+      .box-service { fill: #0d1117; stroke: #30363d; }
+      .box-eks { fill: #1c1508; stroke: #d29922; }
+      .box-gke { fill: #0d1a30; stroke: #58a6ff; }
+      .box-identity { fill: #0d2117; stroke: #3fb950; }
+      .box-git { fill: #161b22; stroke: #8b949e; }
+      .arrow { stroke: #8b949e; }
+      .arrow-provision { stroke: #58a6ff; }
+      .arrow-identity { stroke: #3fb950; }
+      .label-bg { fill: #0d1117; }
+      .section-label { fill: #8b949e; }
+      .badge-aws { fill: #d29922; }
+      .badge-gcp { fill: #58a6ff; }
+    }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" class="text-muted"/>
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1a7f37"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="620" class="bg" rx="8"/>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TOP ROW: Developer + Identity          -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <!-- Developer / Git -->
+  <rect x="30" y="25" width="180" height="70" rx="8" class="box-git"/>
+  <text x="120" y="53" text-anchor="middle" class="text" font-size="15" font-weight="600">GitHub</text>
+  <text x="120" y="73" text-anchor="middle" class="text-small">Git push / merge</text>
+
+  <!-- Identity -->
+  <rect x="660" y="25" width="270" height="70" rx="8" class="box-identity"/>
+  <text x="685" y="44" class="section-label">IDENTITY</text>
+  <text x="795" y="63" text-anchor="middle" class="text" font-size="15" font-weight="600">Google &#x2192; Dex</text>
+  <text x="795" y="81" text-anchor="middle" class="text-small">SSO to all platform UIs</text>
+
+  <!-- Arrow: Git to ArgoCD -->
+  <path d="M210,60 L275,60 L275,162" class="arrow"/>
+  <rect x="230" y="97" width="90" height="20" rx="3" class="label-bg"/>
+  <text x="275" y="111" text-anchor="middle" class="text-small">GitOps sync</text>
+
+  <!-- Arrow: Identity down to management cluster -->
+  <path d="M795,95 L795,135" class="arrow-identity"/>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MANAGEMENT CLUSTER                     -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <rect x="30" y="125" width="900" height="300" rx="10" class="box-mgmt"/>
+  <text x="52" y="150" class="section-label">MANAGEMENT CLUSTER</text>
+  <text x="360" y="150" class="text-muted" font-size="12">EKS &#xB7; us-east-2 &#xB7; 3 nodes</text>
+
+  <!-- ── Core Services Row ── -->
+
+  <!-- ArgoCD -->
+  <rect x="60" y="168" width="152" height="60" rx="6" class="box-service"/>
+  <text x="136" y="194" text-anchor="middle" class="text" font-size="15" font-weight="600">ArgoCD</text>
+  <text x="136" y="212" text-anchor="middle" class="text-small">GitOps delivery</text>
+
+  <!-- Crossplane -->
+  <rect x="232" y="168" width="152" height="60" rx="6" class="box-service"/>
+  <text x="308" y="194" text-anchor="middle" class="text" font-size="15" font-weight="600">Crossplane</text>
+  <text x="308" y="212" text-anchor="middle" class="text-small">Infrastructure as Code</text>
+
+  <!-- Backstage -->
+  <rect x="404" y="168" width="152" height="60" rx="6" class="box-service"/>
+  <text x="480" y="194" text-anchor="middle" class="text" font-size="15" font-weight="600">Backstage</text>
+  <text x="480" y="212" text-anchor="middle" class="text-small">Developer portal</text>
+
+  <!-- Kargo -->
+  <rect x="576" y="168" width="152" height="60" rx="6" class="box-service"/>
+  <text x="652" y="194" text-anchor="middle" class="text" font-size="15" font-weight="600">Kargo</text>
+  <text x="652" y="212" text-anchor="middle" class="text-small">Progressive delivery</text>
+
+  <!-- Dex -->
+  <rect x="748" y="168" width="152" height="60" rx="6" class="box-service"/>
+  <text x="824" y="194" text-anchor="middle" class="text" font-size="15" font-weight="600">Dex</text>
+  <text x="824" y="212" text-anchor="middle" class="text-small">OIDC provider</text>
+
+  <!-- Arrow: Identity to Dex box -->
+  <path d="M795,135 L824,135 L824,168" class="arrow-identity"/>
+
+  <!-- ── Observability Row ── -->
+  <rect x="60" y="252" width="540" height="55" rx="6" class="box-service"/>
+  <text x="82" y="272" class="section-label">OBSERVABILITY</text>
+  <text x="82" y="292" class="text" font-size="14">Prometheus</text>
+  <text x="185" y="292" class="text" font-size="14">Grafana</text>
+  <text x="270" y="292" class="text" font-size="14">Loki</text>
+  <text x="325" y="292" class="text" font-size="14">Tempo</text>
+  <text x="395" y="292" class="text" font-size="14">Alertmanager</text>
+
+  <!-- ── Infrastructure Row ── -->
+  <rect x="60" y="322" width="540" height="55" rx="6" class="box-service"/>
+  <text x="82" y="342" class="section-label">INFRASTRUCTURE</text>
+  <text x="82" y="362" class="text" font-size="14">Istio</text>
+  <text x="135" y="362" class="text" font-size="14">cert-manager</text>
+  <text x="260" y="362" class="text" font-size="14">ExternalDNS</text>
+  <text x="375" y="362" class="text" font-size="14">ESO</text>
+  <text x="425" y="362" class="text" font-size="14">Kyverno</text>
+
+  <!-- ── Credential Boxes ── -->
+  <rect x="630" y="252" width="270" height="55" rx="6" class="box-service"/>
+  <text x="652" y="272" class="section-label">AWS CREDENTIALS</text>
+  <text x="765" y="292" text-anchor="middle" class="text" font-size="14">IRSA (no static keys)</text>
+
+  <rect x="630" y="322" width="270" height="55" rx="6" class="box-service"/>
+  <text x="652" y="342" class="section-label">GCP CREDENTIALS</text>
+  <text x="765" y="362" text-anchor="middle" class="text" font-size="14">Workload Identity Federation</text>
+
+  <!-- ── Promotion flow label ── -->
+  <text x="480" y="412" text-anchor="middle" class="text-muted" font-size="12">Crossplane provisions clusters &#xB7; ArgoCD deploys platform services &#xB7; Kargo promotes applications</text>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ARROWS: Management to Workload         -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <!-- Left arrow to EKS -->
+  <path d="M308,425 L308,458 L275,458 L275,480" class="arrow-provision"/>
+  <rect x="200" y="445" width="90" height="18" rx="3" class="label-bg"/>
+  <text x="245" y="458" text-anchor="middle" class="text-small">provisions</text>
+
+  <!-- Right arrow to GKE -->
+  <path d="M652,425 L652,458 L685,458 L685,480" class="arrow-provision"/>
+  <rect x="625" y="445" width="90" height="18" rx="3" class="label-bg"/>
+  <text x="670" y="458" text-anchor="middle" class="text-small">provisions</text>
+
+  <!-- Kargo promotion arrow -->
+  <path d="M410,530 L550,530" class="arrow"/>
+  <rect x="435" y="514" width="100" height="18" rx="3" class="label-bg"/>
+  <text x="480" y="527" text-anchor="middle" class="text-small">Kargo promotes</text>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- WORKLOAD CLUSTERS                      -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <!-- EKS Workload (Staging) -->
+  <rect x="80" y="480" width="330" height="110" rx="10" class="box-eks"/>
+  <text x="102" y="506" class="badge badge-aws">AWS</text>
+  <text x="245" y="506" text-anchor="middle" class="text" font-size="16" font-weight="600">EKS Workload</text>
+  <text x="245" y="528" text-anchor="middle" class="text-muted" font-size="14">Staging environment</text>
+  <text x="245" y="550" text-anchor="middle" class="text-muted" font-size="13">*.staging.plateng.dev</text>
+  <text x="245" y="572" text-anchor="middle" class="text-small">Istio &#xB7; cert-manager &#xB7; ExternalDNS &#xB7; podinfo</text>
+
+  <!-- GKE Workload (Production) -->
+  <rect x="550" y="480" width="330" height="110" rx="10" class="box-gke"/>
+  <text x="572" y="506" class="badge badge-gcp">GCP</text>
+  <text x="715" y="506" text-anchor="middle" class="text" font-size="16" font-weight="600">GKE Workload</text>
+  <text x="715" y="528" text-anchor="middle" class="text-muted" font-size="14">Production environment</text>
+  <text x="715" y="550" text-anchor="middle" class="text-muted" font-size="13">*.prod.plateng.dev</text>
+  <text x="715" y="572" text-anchor="middle" class="text-small">Istio &#xB7; cert-manager &#xB7; ExternalDNS &#xB7; podinfo</text>
+
+</svg>
