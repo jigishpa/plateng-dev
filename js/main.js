@@ -80,7 +80,7 @@
 
     padded.forEach(function (d) {
       if (!d) {
-        html += '<div class="day empty" title="No data"></div>';
+        html += '<div class="day empty"><span class="tooltip">No data</span></div>';
       } else {
         var cls =
           d.uptimePercent === 100
@@ -88,14 +88,13 @@
             : d.uptimePercent > 0
               ? "partial"
               : "down";
+        var tip = formatShortDate(d.date) +
+          "<br>" + d.uptimePercent + "% uptime" +
+          "<br>" + d.checksUp + "/" + d.checksTotal + " checks passed";
         html +=
-          '<div class="day ' +
-          cls +
-          '" title="' +
-          d.date +
-          ": " +
-          d.uptimePercent +
-          '% uptime"></div>';
+          '<div class="day ' + cls + '">' +
+          '<span class="tooltip">' + tip + '</span>' +
+          '</div>';
       }
     });
 
@@ -143,14 +142,13 @@
         '<h3 style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); margin-bottom: 0.5rem;">Test History</h3>';
       html += '<div class="e2e-history">';
       data.history.forEach(function (h) {
+        var e2eTip = formatShortDate(h.date) + "<br>" + h.result.toUpperCase() +
+          (h.durationSeconds ? "<br>" + formatDuration(h.durationSeconds) : "") +
+          (h.reason ? "<br>" + h.reason : "");
         html +=
-          '<div class="day ' +
-          h.result +
-          '" title="' +
-          h.date +
-          ": " +
-          h.result +
-          '"></div>';
+          '<div class="day ' + h.result + '">' +
+          '<span class="tooltip">' + e2eTip + '</span>' +
+          '</div>';
       });
       html += "</div>";
     }
@@ -180,6 +178,12 @@
   }
 
   // ── Helpers ──
+
+  function formatShortDate(dateStr) {
+    var parts = dateStr.split("-");
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
 
   function formatDate(iso) {
     if (!iso) return "N/A";

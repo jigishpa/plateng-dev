@@ -314,12 +314,37 @@ section:last-of-type {
   width: 8px;
   height: 24px;
   border-radius: 2px;
+  position: relative;
+  cursor: default;
 }
 
 .uptime-timeline .day.full { background: var(--color-green); }
 .uptime-timeline .day.partial { background: var(--color-badge-incubating); }
 .uptime-timeline .day.down { background: var(--color-red); }
 .uptime-timeline .day.empty { background: var(--color-gray-bg); }
+
+.uptime-timeline .day .tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.uptime-timeline .day:hover .tooltip {
+  display: block;
+}
 
 .uptime-legend {
   display: flex;
@@ -391,11 +416,36 @@ section:last-of-type {
   width: 10px;
   height: 10px;
   border-radius: 2px;
+  position: relative;
+  cursor: default;
 }
 
 .e2e-history .day.pass { background: var(--color-green); }
 .e2e-history .day.fail { background: var(--color-red); }
 .e2e-history .day.skipped { background: var(--color-gray-bg); }
+
+.e2e-history .day .tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.e2e-history .day:hover .tooltip {
+  display: block;
+}
 
 /* ── Screenshots / Live UIs ── */
 .ui-cards {
