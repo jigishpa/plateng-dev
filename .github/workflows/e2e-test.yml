@@ -104,7 +104,7 @@ jobs:
             cloud: aws
             region: us-east-2
             version: "1.32"
-            nodeCount: 2
+            nodeCount: 3
             nodeSize: small
             vpcCidr: "10.200.0.0/16"
             tier: workload
@@ -157,7 +157,7 @@ jobs:
             cloud: gcp
             region: us-central1
             version: "1.32"
-            nodeCount: 2
+            nodeCount: 1
             nodeSize: small
             vpcCidr: "10.201.0.0/16"
             tier: workload
