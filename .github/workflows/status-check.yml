@@ -1,0 +1,142 @@
+name: Status Check
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe endpoints and update status
+        run: |
+          set -euo pipefail
+
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          TODAY=$(date -u +"%Y-%m-%d")
+          CUTOFF=$(date -u -d "90 days ago" +"%Y-%m-%d")
+
+          # Read existing data
+          EXISTING=$(cat data/status.json)
+
+          # Endpoints: key|display_name|url
+          ENDPOINTS=(
+            "argocd|ArgoCD|https://argocd.plateng.dev"
+            "backstage|Backstage|https://backstage.plateng.dev"
+            "grafana|Grafana|https://grafana.plateng.dev"
+            "kargo|Kargo|https://kargo.plateng.dev"
+            "dex|Dex|https://dex.plateng.dev/.well-known/openid-configuration"
+          )
+
+          COMPONENTS="{}"
+          ALL_UP=true
+
+          for entry in "${ENDPOINTS[@]}"; do
+            IFS='|' read -r key name url <<< "$entry"
+
+            # Single curl: capture HTTP code and response time
+            RESULT=$(curl -s -o /dev/null -w "%{http_code}|%{time_total}" --max-time 10 "$url" 2>/dev/null) || RESULT="000|0"
+            HTTP_CODE="${RESULT%%|*}"
+            TIME_TOTAL="${RESULT##*|}"
+
+            # Sanitize to valid integers
+            HTTP_CODE=$((10#${HTTP_CODE:-0}))
+            RESPONSE_MS=$(awk "BEGIN {printf \"%.0f\", ${TIME_TOTAL:-0} * 1000}")
+
+            # 2xx and 3xx count as up
+            if (( HTTP_CODE >= 200 && HTTP_CODE < 400 )); then
+              STATUS="up"
+              LAST_UP="$NOW"
+            else
+              STATUS="down"
+              ALL_UP=false
+              # Preserve previous lastUp timestamp
+              LAST_UP=$(echo "$EXISTING" | jq -r ".components.${key}.lastUp // empty")
+            fi
+
+            # Build component object
+            COMP=$(jq -n \
+              --arg name "$name" \
+              --arg url "$url" \
+              --arg status "$STATUS" \
+              --argjson httpCode "$HTTP_CODE" \
+              --argjson responseMs "$RESPONSE_MS" \
+              '{name: $name, url: $url, status: $status, httpCode: $httpCode, responseMs: $responseMs}')
+
+            if [[ -n "$LAST_UP" ]]; then
+              COMP=$(echo "$COMP" | jq --arg lastUp "$LAST_UP" '. + {lastUp: $lastUp}')
+            fi
+
+            COMPONENTS=$(echo "$COMPONENTS" | jq --arg key "$key" --argjson comp "$COMP" '.[$key] = $comp')
+
+            echo "$key: status=$STATUS code=$HTTP_CODE time=${RESPONSE_MS}ms"
+          done
+
+          # --- Update daily uptime array ---
+
+          DAILY=$(echo "$EXISTING" | jq '.daily // []')
+
+          # Get today's entry index (-1 if not found)
+          TODAY_IDX=$(echo "$DAILY" | jq --arg today "$TODAY" \
+            '[to_entries[] | select(.value.date == $today) | .key] | if length > 0 then .[0] else -1 end')
+
+          if [[ "$TODAY_IDX" == "-1" ]]; then
+            CHECKS_TOTAL=1
+            if [[ "$ALL_UP" == "true" ]]; then CHECKS_UP=1; else CHECKS_UP=0; fi
+          else
+            CHECKS_TOTAL=$(echo "$DAILY" | jq --argjson idx "$TODAY_IDX" '.[$idx].checksTotal + 1')
+            PREV_UP=$(echo "$DAILY" | jq --argjson idx "$TODAY_IDX" '.[$idx].checksUp')
+            if [[ "$ALL_UP" == "true" ]]; then
+              CHECKS_UP=$(( PREV_UP + 1 ))
+            else
+              CHECKS_UP=$PREV_UP
+            fi
+          fi
+
+          UPTIME_PERCENT=$(awk "BEGIN {printf \"%.0f\", $CHECKS_UP * 100 / $CHECKS_TOTAL}")
+
+          TODAY_ENTRY=$(jq -n \
+            --arg date "$TODAY" \
+            --argjson checksTotal "$CHECKS_TOTAL" \
+            --argjson checksUp "$CHECKS_UP" \
+            --argjson uptimePercent "$UPTIME_PERCENT" \
+            '{date: $date, checksTotal: $checksTotal, checksUp: $checksUp, uptimePercent: $uptimePercent}')
+
+          if [[ "$TODAY_IDX" == "-1" ]]; then
+            DAILY=$(echo "$DAILY" | jq --argjson entry "$TODAY_ENTRY" '. + [$entry]')
+          else
+            DAILY=$(echo "$DAILY" | jq --argjson idx "$TODAY_IDX" --argjson entry "$TODAY_ENTRY" '.[$idx] = $entry')
+          fi
+
+          # Prune entries older than 90 days
+          DAILY=$(echo "$DAILY" | jq --arg cutoff "$CUTOFF" '[.[] | select(.date >= $cutoff)]')
+
+          # Write final JSON
+          jq -n \
+            --arg lastChecked "$NOW" \
+            --argjson components "$COMPONENTS" \
+            --argjson daily "$DAILY" \
+            '{lastChecked: $lastChecked, components: $components, daily: $daily}' > data/status.json
+
+          echo "---"
+          echo "All up: $ALL_UP"
+          cat data/status.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/status.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git pull --rebase
+            git commit -m "chore: update platform status"
+            git push
+          fi
