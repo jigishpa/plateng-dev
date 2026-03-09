@@ -68,7 +68,7 @@
   <!-- Identity -->
   <rect x="660" y="25" width="270" height="70" rx="8" class="box-identity"/>
   <text x="685" y="44" class="section-label">IDENTITY</text>
-  <text x="795" y="63" text-anchor="middle" class="text" font-size="15" font-weight="600">Google &#x2192; Dex</text>
+  <text x="795" y="63" text-anchor="middle" class="text" font-size="15" font-weight="600">GitHub &#x2192; Dex</text>
   <text x="795" y="81" text-anchor="middle" class="text-small">SSO to all platform UIs</text>
 
   <!-- Arrow: Git to ArgoCD -->
