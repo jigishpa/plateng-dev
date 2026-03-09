@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 #
-# Creates Route53 A records pointing a domain to GitHub Pages.
+# Creates Route53 DNS records pointing a domain to GitHub Pages.
+# Sets up both the apex A records and a www CNAME.
 # These records are static and independent of any Kubernetes cluster.
 #
 # Usage:
-#   AWS_PROFILE=<profile> ./scripts/dns-setup.sh <domain>
-#   AWS_PROFILE=<profile> ./scripts/dns-setup.sh <domain> delete
+#   AWS_PROFILE=<profile> ./scripts/dns-setup.sh <domain> <github-user>
+#   AWS_PROFILE=<profile> ./scripts/dns-setup.sh <domain> <github-user> delete
 #
 # Example:
-#   AWS_PROFILE=mcp-infrastructure ./scripts/dns-setup.sh plateng.dev
-#   AWS_PROFILE=mcp-infrastructure ./scripts/dns-setup.sh plateng.dev delete
+#   AWS_PROFILE=mcp-admin-emergency ./scripts/dns-setup.sh plateng.dev jigishpa
+#   AWS_PROFILE=mcp-admin-emergency ./scripts/dns-setup.sh plateng.dev jigishpa delete
+#
+# Creates:
+#   plateng.dev      A     185.199.108-111.153  (GitHub Pages IPs)
+#   www.plateng.dev  CNAME jigishpa.github.io   (GitHub Pages subdomain)
 #
 # Prerequisites:
 #   - AWS CLI configured
@@ -24,13 +29,14 @@ if [[ -z "${AWS_PROFILE:-}" ]]; then
 fi
 
 DOMAIN="${1:-}"
-if [[ -z "${DOMAIN}" ]]; then
-  echo "Usage: AWS_PROFILE=<profile> $0 <domain> [delete]" >&2
+GITHUB_USER="${2:-}"
+if [[ -z "${DOMAIN}" || -z "${GITHUB_USER}" ]]; then
+  echo "Usage: AWS_PROFILE=<profile> $0 <domain> <github-user> [delete]" >&2
   exit 1
 fi
 
 ACTION="UPSERT"
-if [[ "${2:-}" == "delete" ]]; then
+if [[ "${3:-}" == "delete" ]]; then
   ACTION="DELETE"
 fi
 
@@ -55,7 +61,7 @@ if [[ -z "${HOSTED_ZONE_ID}" ]]; then
   exit 1
 fi
 
-# Build resource records array
+# Build A record resource records array
 RECORDS=""
 for ip in "${GITHUB_PAGES_IPS[@]}"; do
   RECORDS="${RECORDS}{\"Value\": \"${ip}\"},"
@@ -64,7 +70,7 @@ RECORDS="[${RECORDS%,}]"
 
 CHANGE_BATCH=$(cat <<EOF
 {
-  "Comment": "GitHub Pages A records for ${DOMAIN}",
+  "Comment": "GitHub Pages DNS records for ${DOMAIN}",
   "Changes": [
     {
       "Action": "${ACTION}",
@@ -74,14 +80,24 @@ CHANGE_BATCH=$(cat <<EOF
         "TTL": ${TTL},
         "ResourceRecords": ${RECORDS}
       }
+    },
+    {
+      "Action": "${ACTION}",
+      "ResourceRecordSet": {
+        "Name": "www.${DOMAIN}",
+        "Type": "CNAME",
+        "TTL": ${TTL},
+        "ResourceRecords": [{"Value": "${GITHUB_USER}.github.io"}]
+      }
     }
   ]
 }
 EOF
 )
 
-echo "Route53: ${ACTION} A records for ${DOMAIN}"
-echo "  IPs: ${GITHUB_PAGES_IPS[*]}"
+echo "Route53: ${ACTION} DNS records for ${DOMAIN}"
+echo "  ${DOMAIN}     A     ${GITHUB_PAGES_IPS[*]}"
+echo "  www.${DOMAIN} CNAME ${GITHUB_USER}.github.io"
 echo "  TTL: ${TTL}s"
 echo "  Zone: ${HOSTED_ZONE_ID}"
 echo ""
@@ -92,4 +108,6 @@ aws route53 change-resource-record-sets \
   --output json
 
 echo ""
-echo "Done. Verify with: dig +short ${DOMAIN} A"
+echo "Done. Verify with:"
+echo "  dig +short ${DOMAIN} A"
+echo "  dig +short www.${DOMAIN} CNAME"
