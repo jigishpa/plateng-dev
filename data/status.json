@@ -1,45 +1,45 @@
 {
-  "lastChecked": "2026-03-30T21:15:43Z",
+  "lastChecked": "2026-03-30T21:45:36Z",
   "components": {
     "argocd": {
       "name": "ArgoCD",
       "url": "https://argocd.plateng.dev",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 291,
-      "lastUp": "2026-03-30T21:15:43Z"
+      "responseMs": 256,
+      "lastUp": "2026-03-30T21:45:36Z"
     },
     "backstage": {
       "name": "Backstage",
       "url": "https://backstage.plateng.dev",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 277,
-      "lastUp": "2026-03-30T21:15:43Z"
+      "responseMs": 197,
+      "lastUp": "2026-03-30T21:45:36Z"
     },
     "grafana": {
       "name": "Grafana",
       "url": "https://grafana.plateng.dev",
       "status": "up",
       "httpCode": 302,
-      "responseMs": 216,
-      "lastUp": "2026-03-30T21:15:43Z"
+      "responseMs": 199,
+      "lastUp": "2026-03-30T21:45:36Z"
     },
     "kargo": {
       "name": "Kargo",
       "url": "https://kargo.plateng.dev",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 248,
-      "lastUp": "2026-03-30T21:15:43Z"
+      "responseMs": 178,
+      "lastUp": "2026-03-30T21:45:36Z"
     },
     "dex": {
       "name": "Dex",
       "url": "https://dex.plateng.dev/.well-known/openid-configuration",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 210,
-      "lastUp": "2026-03-30T21:15:43Z"
+      "responseMs": 213,
+      "lastUp": "2026-03-30T21:45:36Z"
     }
   },
   "daily": [
@@ -171,8 +171,8 @@
     },
     {
       "date": "2026-03-30",
-      "checksTotal": 31,
-      "checksUp": 31,
+      "checksTotal": 32,
+      "checksUp": 32,
       "uptimePercent": 100
     }
   ]
