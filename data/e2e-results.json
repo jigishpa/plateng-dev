@@ -1,8 +1,8 @@
 {
   "lastRun": {
-    "date": "2026-04-01T15:06:24Z",
+    "date": "2026-04-02T15:01:05Z",
     "result": "fail",
-    "durationSeconds": 2140,
+    "durationSeconds": 2107,
     "eks": {
       "result": "fail",
       "provisionSeconds": 0,
@@ -19,6 +19,11 @@
     }
   },
   "history": [
+    {
+      "date": "2026-04-02",
+      "result": "fail",
+      "durationSeconds": 2107
+    },
     {
       "date": "2026-04-01",
       "result": "fail",
