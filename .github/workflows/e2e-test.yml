@@ -336,11 +336,24 @@ jobs:
             fi
           }
 
-          echo "Cleaning up claim files..."
-          delete_file "${CLAIM_BASE}/e2e-eks-workload.yaml" "e2e: cleanup EKS workload cluster claim"
+          echo "Cleaning up claim files (gateways first, then clusters)..."
+
+          # Step 1: Delete gateway claims first (Layer 2)
+          # ArgoCD prunes the ClusterGateway resources, which triggers
+          # NLB/DNS cleanup while the cluster is still running.
           delete_file "${CLAIM_BASE}/e2e-eks-workload-gw.yaml" "e2e: cleanup EKS workload gateway claim"
-          delete_file "${CLAIM_BASE}/e2e-gke-workload.yaml" "e2e: cleanup GKE workload cluster claim"
           delete_file "${CLAIM_BASE}/e2e-gke-workload-gw.yaml" "e2e: cleanup GKE workload gateway claim"
+
+          # Step 2: Wait for ArgoCD to sync and Crossplane to process
+          # the gateway deletions. Without this, deleting the cluster
+          # claims simultaneously causes the istio-gateway ArgoCD App
+          # finalizer to hang (can't reach a deleted cluster).
+          echo "Waiting 120s for gateway claims to be pruned..."
+          sleep 120
+
+          # Step 3: Delete cluster claims (Layer 1)
+          delete_file "${CLAIM_BASE}/e2e-eks-workload.yaml" "e2e: cleanup EKS workload cluster claim"
+          delete_file "${CLAIM_BASE}/e2e-gke-workload.yaml" "e2e: cleanup GKE workload cluster claim"
           echo "Cleanup complete"
 
       # ── Step 5: Record results and commit ──
