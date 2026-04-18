@@ -1,8 +1,8 @@
 {
   "lastRun": {
-    "date": "2026-04-17T15:00:57Z",
+    "date": "2026-04-18T14:49:02Z",
     "result": "fail",
-    "durationSeconds": 2123,
+    "durationSeconds": 2114,
     "eks": {
       "result": "fail",
       "provisionSeconds": 0,
@@ -11,14 +11,19 @@
       "responseMs": 0
     },
     "gke": {
-      "result": "fail",
-      "provisionSeconds": 0,
+      "result": "pass",
+      "provisionSeconds": 1362,
       "podinfoUrl": "https://podinfo.prod.plateng.dev",
-      "httpCode": 0,
-      "responseMs": 0
+      "httpCode": 200,
+      "responseMs": 437
     }
   },
   "history": [
+    {
+      "date": "2026-04-18",
+      "result": "fail",
+      "durationSeconds": 2114
+    },
     {
       "date": "2026-04-17",
       "result": "fail",
