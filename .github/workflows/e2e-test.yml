@@ -2,8 +2,8 @@ name: Daily E2E Test
 
 # Provisions EKS + GKE clusters daily, validates full pipeline, records results
 on:
-  schedule:
-    - cron: '0 14 * * *'
+  # schedule:
+  #   - cron: '0 14 * * *'
   workflow_dispatch:
 
 permissions:
