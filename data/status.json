@@ -1,37 +1,37 @@
 {
-  "lastChecked": "2026-05-13T13:15:30Z",
+  "lastChecked": "2026-05-13T14:17:30Z",
   "components": {
     "argocd": {
       "name": "ArgoCD",
       "url": "https://argocd.plateng.dev",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 343,
-      "lastUp": "2026-05-13T13:15:30Z"
+      "responseMs": 92,
+      "lastUp": "2026-05-13T14:17:30Z"
     },
     "backstage": {
       "name": "Backstage",
       "url": "https://backstage.plateng.dev",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 289,
-      "lastUp": "2026-05-13T13:15:30Z"
+      "responseMs": 179,
+      "lastUp": "2026-05-13T14:17:30Z"
     },
     "grafana": {
       "name": "Grafana",
       "url": "https://grafana.plateng.dev",
       "status": "up",
       "httpCode": 302,
-      "responseMs": 279,
-      "lastUp": "2026-05-13T13:15:30Z"
+      "responseMs": 179,
+      "lastUp": "2026-05-13T14:17:30Z"
     },
     "kargo": {
       "name": "Kargo",
       "url": "https://kargo.plateng.dev",
       "status": "up",
       "httpCode": 200,
-      "responseMs": 254,
-      "lastUp": "2026-05-13T13:15:30Z"
+      "responseMs": 247,
+      "lastUp": "2026-05-13T14:17:30Z"
     },
     "dex": {
       "name": "Dex",
@@ -39,7 +39,7 @@
       "status": "up",
       "httpCode": 200,
       "responseMs": 289,
-      "lastUp": "2026-05-13T13:15:30Z"
+      "lastUp": "2026-05-13T14:17:30Z"
     }
   },
   "daily": [
@@ -435,8 +435,8 @@
     },
     {
       "date": "2026-05-13",
-      "checksTotal": 11,
-      "checksUp": 11,
+      "checksTotal": 12,
+      "checksUp": 12,
       "uptimePercent": 100
     }
   ]
