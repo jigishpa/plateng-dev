@@ -16,12 +16,12 @@ env:
   GKE_PODINFO_URL: https://podinfo.prod.plateng.dev
   INITIAL_WAIT: 720
   POLL_INTERVAL: 30
-  TIMEOUT: 2100
+  TIMEOUT: 2700  # 45m (was 2100/35m): headroom for the WIF-settle window that follows the ArgoCD cluster-registration gate in gke-composition. Stopgap until the WIF-ready latency fix lands.
 
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60  # was 50: must stay > TIMEOUT(45m) + cleanup(~3m) so the teardown step is never killed mid-run (a cut-off teardown leaks claims and can re-trigger the stuck-finalizer deadlock)
     steps:
       - uses: actions/checkout@v4
 
