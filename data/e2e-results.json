@@ -1,24 +1,29 @@
 {
   "lastRun": {
-    "date": "2026-07-04T15:41:33Z",
+    "date": "2026-07-05T15:39:00Z",
     "result": "pass",
-    "durationSeconds": 1930,
+    "durationSeconds": 1341,
     "eks": {
       "result": "pass",
-      "provisionSeconds": 1143,
+      "provisionSeconds": 1180,
       "podinfoUrl": "https://podinfo.staging.plateng.dev",
       "httpCode": 200,
-      "responseMs": 2251
+      "responseMs": 283
     },
     "gke": {
       "result": "pass",
-      "provisionSeconds": 1929,
+      "provisionSeconds": 1341,
       "podinfoUrl": "https://podinfo.prod.plateng.dev",
       "httpCode": 200,
-      "responseMs": 347
+      "responseMs": 333
     }
   },
   "history": [
+    {
+      "date": "2026-07-05",
+      "result": "pass",
+      "durationSeconds": 1341
+    },
     {
       "date": "2026-07-04",
       "result": "pass",
