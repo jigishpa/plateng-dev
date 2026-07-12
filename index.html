@@ -16,6 +16,7 @@
     <ul class="nav-links">
       <li><a href="#status">Status</a></li>
       <li><a href="#e2e">E2E Tests</a></li>
+      <li><a href="#ai-ops">AI Ops</a></li>
       <li><a href="#explore">Explore</a></li>
       <li><a href="#architecture">Architecture</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
@@ -98,6 +99,55 @@
     <div id="e2e-content">
       <div class="status-message">No E2E test results yet. Daily tests validate the full platform pipeline.</div>
     </div>
+  </div>
+</section>
+
+<!-- ── AI-Operated Reliability ── -->
+<section id="ai-ops">
+  <div class="container">
+    <div class="section-header">
+      <h2>AI-Operated Reliability</h2>
+      <p>Not just built with AI &mdash; kept green with operator-driven AI agents.</p>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+      When the daily E2E test fails, recovery runs through a custom agentic operations
+      toolkit &mdash; Claude Code skills and subagents built for this platform. The operator
+      stays in the loop and approves each consequential step; the agents do the heavy
+      diagnostic work.
+    </p>
+
+    <div class="principles">
+      <div class="principle">
+        <h3><code>/e2e-triage</code></h3>
+        <p>Orchestrated recovery loop: identifies the failed run, root-causes it from CI logs,
+        results history, and live-cluster state, reproduces on an extended-TTL cluster when
+        evidence is gone, drives the fix, and validates a clean run.</p>
+      </div>
+      <div class="principle">
+        <h3><code>/e2e-status</code></h3>
+        <p>Live run monitoring with early-failure detection &mdash; surfaces a cloud capacity
+        stockout in ~5 minutes instead of waiting out a 35-minute timeout.</p>
+      </div>
+      <div class="principle">
+        <h3>Diagnostic Subagents</h3>
+        <p>Isolated agents read the large CI logs and walk the live resource graph
+        (claim &rarr; Crossplane &rarr; ArgoCD &rarr; gateway &rarr; DNS), each returning a
+        confirmed root cause with evidence.</p>
+      </div>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+      <strong>Proof it works.</strong> This toolkit diagnosed and resolved a multi-day
+      multi-cloud incident: a GCE capacity stockout that cascaded into a stuck
+      Crossplane/ArgoCD finalizer deadlock. It root-caused the failure to a single ungated
+      composition resource, shipped the fix, and validated recovery on the live platform
+      &mdash; surfacing a latent Workload Identity timing bug along the way.
+    </p>
+
+    <p style="font-size: 0.9rem; font-weight: 600;">
+      Built with AI. Operated with AI.
+    </p>
   </div>
 </section>
 
@@ -247,7 +297,7 @@
       </div>
       <div class="principle">
         <h3>Built Entirely with AI</h3>
-        <p>Every line of code, every kubectl command, every debugging session &mdash; done through Claude Code across 100+ paired sessions. Zero lines written manually.</p>
+        <p>Every line of code, every kubectl command, every debugging session &mdash; done through Claude Code across 100+ paired sessions. Zero lines written manually. Failures are handled the same way &mdash; see <a href="#ai-ops">AI-Operated Reliability</a>.</p>
       </div>
     </div>
 
