@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Incident Breakdown: 5-Day GKE Outage — plateng.dev</title>
+  <meta name="description" content="How a GCE stockout became a 5-day multi-cloud e2e outage via a Crossplane/ArgoCD finalizer deadlock — and how operator-driven AI agents detected, root-caused, and recovered it.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand">plateng.dev</a>
+    <ul class="nav-links">
+      <li><a href="index.html#e2e">E2E Tests</a></li>
+      <li><a href="index.html#ai-ops">AI Ops</a></li>
+      <li><a href="index.html">&larr; Back to site</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── Header ── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <h2>Incident Breakdown: the 5-Day GKE Outage (July 2026)</h2>
+      <p>A transient GCP capacity stockout became a self-sustaining multi-day outage.
+         Operator-driven AI agents detected it mid-run, root-caused it from artifacts,
+         and recovered it with a single approved patch.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <span class="number">5</span>
+        <span class="label">Days red (Jul 8&ndash;12)</span>
+      </div>
+      <div class="stat">
+        <span class="number">32m</span>
+        <span class="label">Earlier detection than CI</span>
+      </div>
+      <div class="stat">
+        <span class="number">~75s</span>
+        <span class="label">Deadlock chain drain</span>
+      </div>
+      <div class="stat">
+        <span class="number">1</span>
+        <span class="label">kubectl patch to recover</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── What happened ── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <h2>What Happened</h2>
+      <p>The trigger was external and transient. The outage was a design gap in teardown.</p>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+      On July 8, the daily e2e run hit a <code>GCE_STOCKOUT</code> in <code>us-central1-f</code>:
+      the GKE <strong>node pool</strong> failed to get capacity while the <strong>control plane
+      came up healthy</strong> with a real endpoint. The test timed out and teardown ran &mdash;
+      but ArgoCD's cleanup finalizer couldn't prune resources from a cluster that answers DNS
+      but has no nodes. The finalizer never released, and a chain of Kubernetes protection
+      mechanisms froze behind it:
+    </p>
+
+    <pre style="font-family: var(--font-mono); font-size: 0.8rem; background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1rem; overflow-x: auto; margin-bottom: 1rem; line-height: 1.5;">
+Application/istio-gateway-gcp-gke-workload   &larr; stuck ArgoCD finalizer (head of chain)
+  &#8627; blocks Object/gke-workload-gateway-…      (provider-kubernetes managed resource)
+      &#8627; keeps Usage/gke-workload-gateway-… alive
+          &#8627; "nousages" admission webhook denies the composite delete
+              &#8627; KubernetesCluster/gke-workload stuck Deleting
+                  &#8627; every subsequent daily run collides with the zombie claim</pre>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+      The cluster claim uses a fixed name, so the stuck claim blocked every following run:
+      a one-day capacity blip became five consecutive red days, plus an orphaned GKE cluster
+      (in <code>ERROR</code> state), NAT gateway, and router billing in GCP the whole time.
+    </p>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted);">
+      Two details made this hard to see. The CI job records results with
+      <code>if: always()</code>, so <strong>GitHub Actions showed green for all five failing
+      runs</strong> &mdash; the failure existed only in the results data. And each ephemeral
+      run destroys its own evidence at teardown, so by the time anyone looked, the
+      original failure's artifacts were four days gone.
+    </p>
+  </div>
+</section>
+
+<!-- ── Detection ── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <h2>Detection: <code>/e2e-status</code></h2>
+      <p>One command against the in-flight day-5 run, 13 minutes in.</p>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+      The status skill probed both endpoints, inspected live provisioning on the management
+      cluster, and found the collision: three resources stuck <code>Deleting</code> since
+      July 8, blocking the GKE leg. Verdict at 15:13 UTC: <em>"will likely FAIL (GKE) &mdash;
+      colliding with a 4-day-old zombie claim."</em> The pipeline recorded that failure at
+      15:45 UTC &mdash; <strong>32 minutes later</strong>.
+    </p>
+
+    <div class="walkthrough">
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-12-e2e-history-red-streak.png" alt="plateng.dev e2e section showing EKS PASS, GKE FAIL, and a 5-day red streak in test history" loading="lazy"></div>
+        <div class="walkthrough-label">The before: 5 red days</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-12-e2e-status-early-detection.png" alt="Terminal: /e2e-status invocation, live checks, and the will-likely-FAIL verdict naming three stuck resources" loading="lazy" style="object-position: top;"></div>
+        <div class="walkthrough-label">/e2e-status calls it at minute 13</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Recovery ── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <h2>Recovery: <code>/e2e-triage</code></h2>
+      <p>Forensics agent &rarr; confirmed root cause &rarr; operator approval &rarr; unstick &rarr; validation.</p>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+      The triage skill delegated log-reading to an isolated forensics agent (28 tool calls
+      against CI logs, results history, and the live cluster), which returned a
+      <strong>confirmed</strong> root cause with no reproduction needed &mdash; including why
+      a mitigation shipped 9 days earlier didn't prevent this: it gated on "endpoint absent,"
+      and this variant had a healthy endpoint with a dead node pool. The operator approved the
+      recovery writes at an explicit gate; the fix itself was one <code>kubectl patch</code>
+      removing the stuck finalizer. The chain drained in ~75 seconds, Crossplane completed the
+      entire GCP teardown unassisted, and a validation run went green on both clouds.
+    </p>
+
+    <div class="walkthrough">
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-13-triage-1-invocation-forensics-gate.png" alt="Terminal: /e2e-triage invocation, preflight, forensics agent run, leftover scan, and approval dialog" loading="lazy" style="object-position: top;"></div>
+        <div class="walkthrough-label">One command starts the loop</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-13-triage-2-forensics-verdict.png" alt="Forensics verdict: confirmed root cause with deadlock chain diagram and recovery plan" loading="lazy" style="object-position: top;"></div>
+        <div class="walkthrough-label">Confirmed verdict + chain</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-13-triage-3-approval-gate.png" alt="Fix approval dialog: operator chooses between unstick+validate, unstick only, or hold" loading="lazy"></div>
+        <div class="walkthrough-label">Operator approval gate</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-13-triage-4-unstick-drain-validate.png" alt="Terminal: kubectl patch removes finalizer, chain drains, leftover scan clean, validation run dispatched" loading="lazy" style="object-position: top;"></div>
+        <div class="walkthrough-label">Unstick &rarr; drain &rarr; dispatch</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-13-triage-5-validation-pass.png" alt="Validation run passes on both clouds; definition-of-done checklist all green" loading="lazy" style="object-position: top;"></div>
+        <div class="walkthrough-label">Validation: both clouds PASS</div>
+      </div>
+      <div class="walkthrough-step">
+        <div class="walkthrough-img"><img src="images/screenshots/ai-ops/2026-07-13-e2e-pass-light.png" alt="plateng.dev e2e section after recovery: EKS PASS and GKE PASS, green square ending the red streak" loading="lazy"></div>
+        <div class="walkthrough-label">The after: green again</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Timeline ── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <h2>Timeline</h2>
+      <p>All times UTC.</p>
+    </div>
+
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Event</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Jul 8, 16:08</td>
+          <td>Daily run provisions GKE; <code>GCE_STOCKOUT</code> fails the node pool while the control plane comes up healthy</td>
+        </tr>
+        <tr>
+          <td>Jul 8, 16:53</td>
+          <td>Teardown deadlocks &mdash; ArgoCD finalizer can't prune the unreachable cluster; the whole chain freezes</td>
+        </tr>
+        <tr>
+          <td>Jul 8&ndash;12</td>
+          <td>Five daily runs fail the GKE leg by colliding with the zombie claim; GitHub Actions shows green throughout</td>
+        </tr>
+        <tr>
+          <td>Jul 12, 15:13</td>
+          <td><code>/e2e-status</code> flags the in-flight run: "will likely FAIL (GKE) &mdash; colliding with zombie" (32 min before CI records it)</td>
+        </tr>
+        <tr>
+          <td>Jul 13, 00:05</td>
+          <td><code>/e2e-triage</code> forensics agent returns a <strong>confirmed</strong> RCA; no reproduction needed</td>
+        </tr>
+        <tr>
+          <td>Jul 13, 00:20</td>
+          <td>Operator approves; one <code>kubectl patch</code> removes the stuck finalizer; chain drains in ~75s</td>
+        </tr>
+        <tr>
+          <td>Jul 13, 00:25</td>
+          <td>Crossplane tears down the orphaned GCP cluster/NAT/router unassisted; leftover scan clean</td>
+        </tr>
+        <tr>
+          <td>Jul 13, 00:52</td>
+          <td>Validation run passes on <strong>both clouds</strong> (total 23m 1s, healthy range) &mdash; outage closed</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── Honest notes ── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <h2>Honest Notes</h2>
+      <p>What this recovery was &mdash; and wasn't.</p>
+    </div>
+
+    <div class="principles">
+      <div class="principle">
+        <h3>Human in the loop, by design</h3>
+        <p>The agents did the diagnostic work &mdash; log forensics, live-cluster inspection,
+        dedupe against known failures. Every consequential write went through an explicit
+        operator approval gate.</p>
+      </div>
+      <div class="principle">
+        <h3>Recovery, not yet prevention</h3>
+        <p>This closed the outage with the documented manual unstick; no code change was
+        needed. The durable fix &mdash; precondition-guarded finalizer cleanup &mdash; is
+        designed and scheduled, and this incident sharpened its spec: "endpoint present but
+        unreachable" must be treated like "endpoint absent."</p>
+      </div>
+      <div class="principle">
+        <h3>Third occurrence, fastest recovery</h3>
+        <p>This failure class first appeared in June and took a multi-day, largely manual
+        diagnosis. This time, with the toolkit: detected mid-run, root-caused from artifacts
+        in minutes, recovered same-session.</p>
+      </div>
+    </div>
+
+    <p style="font-size: 0.9rem; font-weight: 600; margin-top: 1.5rem;">
+      Built with AI. Operated with AI.
+      <span style="font-weight: 400; color: var(--color-text-muted);">&mdash; see
+      <a href="index.html#ai-ops">AI-Operated Reliability</a> for the toolkit.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <p>
+      <a href="https://github.com/jigishpa/plateng-dev">Source</a> &middot;
+      Built with plain HTML, CSS, and vanilla JS &middot;
+      &copy; 2026
+    </p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
