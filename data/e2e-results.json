@@ -1,8 +1,8 @@
 {
   "lastRun": {
-    "date": "2026-07-27T17:10:14Z",
+    "date": "2026-07-28T16:51:41Z",
     "result": "fail",
-    "durationSeconds": 2739,
+    "durationSeconds": 2725,
     "eks": {
       "result": "fail",
       "provisionSeconds": 0,
@@ -19,6 +19,11 @@
     }
   },
   "history": [
+    {
+      "date": "2026-07-28",
+      "result": "fail",
+      "durationSeconds": 2725
+    },
     {
       "date": "2026-07-27",
       "result": "fail",
@@ -463,11 +468,6 @@
       "date": "2026-03-20",
       "result": "fail",
       "durationSeconds": 2110
-    },
-    {
-      "date": "2026-03-19",
-      "result": "pass",
-      "durationSeconds": 1370
     }
   ]
 }
