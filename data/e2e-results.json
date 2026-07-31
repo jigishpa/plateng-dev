@@ -1,14 +1,14 @@
 {
   "lastRun": {
-    "date": "2026-07-30T16:38:44Z",
+    "date": "2026-07-31T16:47:45Z",
     "result": "fail",
-    "durationSeconds": 2727,
+    "durationSeconds": 2701,
     "eks": {
       "result": "pass",
-      "provisionSeconds": 1062,
+      "provisionSeconds": 1253,
       "podinfoUrl": "https://podinfo.staging.plateng.dev",
       "httpCode": 200,
-      "responseMs": 7110
+      "responseMs": 185
     },
     "gke": {
       "result": "fail",
@@ -19,6 +19,11 @@
     }
   },
   "history": [
+    {
+      "date": "2026-07-31",
+      "result": "fail",
+      "durationSeconds": 2701
+    },
     {
       "date": "2026-07-30",
       "result": "fail",
@@ -463,11 +468,6 @@
       "date": "2026-03-23",
       "result": "fail",
       "durationSeconds": 2129
-    },
-    {
-      "date": "2026-03-22",
-      "result": "pass",
-      "durationSeconds": 1346
     }
   ]
 }
